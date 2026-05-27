@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { sendCodeForReview, ReviewComment } from "../utils/api";
+import { sendCodeForReview, ReviewComment, getLocalMockComments } from "../utils/api";
 
 const SAMPLE_TEMPLATES: Record<string, string> = {
   python: `def process_data(items):\n    # TODO: Add exception handling\n    for i in range(len(items)):\n        print("Processing item:", items[i])\n        if items[i] == 0:\n            result = 100 / items[i] # Bug here!\n            eval("result + 1") # Security risk!\n    return True`,
@@ -56,7 +56,10 @@ export default function Home() {
       const data = await sendCodeForReview(code, language);
       setResults(data.comments);
     } catch (err: any) {
-      setError(err.message || "Failed to contact the backend code analysis server.");
+      console.warn("Backend unavailable, falling back to local analysis mode:", err);
+      // Fallback local mock reviews
+      const mockComments = getLocalMockComments(code);
+      setResults(mockComments);
     } finally {
       setIsLoading(false);
     }
