@@ -1,3 +1,5 @@
+import Cookies from 'js-cookie';
+
 export interface ReviewComment {
   line_number: number;
   severity: "critical" | "warning" | "info";
@@ -12,11 +14,18 @@ export interface ReviewResponse {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 export async function sendCodeForReview(code: string, language?: string): Promise<ReviewResponse> {
+  const token = Cookies.get('token');
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${API_BASE_URL}/review`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({ code, language }),
   });
 

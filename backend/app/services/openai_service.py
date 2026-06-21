@@ -62,15 +62,16 @@ def review_code(code: str, language: str = None) -> ReviewResponse:
         return ReviewResponse(comments=[ReviewComment(**c) for c in mock_comments])
 
     system_prompt = (
-        "You are a senior engineer reviewing a code submission. "
-        "Identify bugs, security vulnerabilities, performance bottlenecks, and code style improvements.\n"
+        "You are an expert security and performance engineer reviewing a code submission.\n"
+        "Your task is to identify bugs, security vulnerabilities, performance bottlenecks, and style violations.\n"
+        "For each issue, you must predict its severity ('critical', 'warning', or 'info') and generate an auto-fix.\n"
         "Return a JSON object containing a 'comments' key, which is an array of objects. "
         "Each object must have the following format exactly:\n"
         "{\n"
         "  \"line_number\": <int, 1-based line number of the code where the issue is found>,\n"
         "  \"severity\": \"critical\" | \"warning\" | \"info\",\n"
-        "  \"message\": \"<explanation of the issue>\",\n"
-        "  \"suggestion\": \"<recommended fix or improvement code>\"\n"
+        "  \"message\": \"<brief explanation of the issue>\",\n"
+        "  \"suggestion\": \"<Provide the EXACT replacement code snippet to fix the issue. Use standard syntax.>\"\n"
         "}"
     )
 

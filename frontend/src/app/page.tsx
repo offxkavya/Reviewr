@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 import { sendCodeForReview, ReviewComment, getLocalMockComments } from "../utils/api";
 
 const SAMPLE_TEMPLATES: Record<string, string> = {
@@ -18,12 +19,33 @@ const LOADING_STEPS = [
 ];
 
 export default function Home() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("python");
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<ReviewComment[] | null>(null);
+
+  useEffect(() => {
+    // Check URL for token after GitHub callback
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+
+    if (token) {
+      Cookies.set("token", token, { expires: 7 }); // 7 days
+      window.history.replaceState({}, document.title, "/"); // clear token from URL
+      setIsAuthenticated(true);
+    } else {
+      const existingToken = Cookies.get("token");
+      if (existingToken) {
+        setIsAuthenticated(true);
+      }
+    }
+    setIsAuthChecking(false);
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -36,6 +58,10 @@ export default function Home() {
     }
     return () => clearInterval(interval);
   }, [isLoading]);
+
+  const handleLogin = () => {
+    window.location.href = "http://localhost:8000/auth/github/login";
+  };
 
   const loadTemplate = (lang: string) => {
     setLanguage(lang);
@@ -57,7 +83,7 @@ export default function Home() {
       const data = await sendCodeForReview(code, language);
       setResults(data.comments);
     } catch (err: any) {
-      console.warn("Backend unavailable, falling back to local analysis mode:", err);
+      console.warn("Backend unavailable or unauthorized, falling back to local analysis mode:", err);
       const mockComments = getLocalMockComments(code);
       setResults(mockComments);
     } finally {
@@ -76,7 +102,7 @@ export default function Home() {
 
   const handleExport = () => {
     if (!results) return;
-    const content = results.map(r => \`Line \${r.line_number} [\${r.severity.toUpperCase()}]: \${r.message}\nSuggestion: \${r.suggestion || 'None'}\n\`).join('\n');
+    const content = results.map(r => `Line ${r.line_number} [${r.severity.toUpperCase()}]: ${r.message}\nSuggestion: ${r.suggestion || 'None'}\n`).join('\n');
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -86,12 +112,55 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
+  if (isAuthChecking) {
+    return (
+      <div className="flex-1 bg-black flex items-center justify-center min-h-screen">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex-1 bg-black flex flex-col items-center justify-center min-h-screen relative overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-blue-900/40 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[400px] h-[400px] rounded-full bg-indigo-900/40 blur-[100px] pointer-events-none" />
+        
+        <div className="w-full max-w-md z-10 p-8 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl text-center space-y-8 animate-fade-in">
+          <div className="space-y-4">
+            <h1 className="text-4xl font-extrabold text-white">Reviewr</h1>
+            <p className="text-zinc-400">Sign in to access the AI code review engine and history dashboard.</p>
+          </div>
+          
+          <button 
+            onClick={handleLogin}
+            className="w-full py-3.5 px-4 bg-white hover:bg-zinc-200 text-black rounded-xl font-bold transition flex items-center justify-center gap-3"
+          >
+            <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
+              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+            Continue with GitHub
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 bg-black flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-blue-900 blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[300px] h-[300px] rounded-full bg-indigo-900 blur-[100px] pointer-events-none" />
       
       <div className="w-full max-w-5xl z-10 space-y-8">
+        <div className="flex justify-end">
+          <button 
+            onClick={() => { Cookies.remove('token'); setIsAuthenticated(false); }} 
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm font-medium transition"
+          >
+            Sign Out
+          </button>
+        </div>
+
         {!results && !isLoading && (
           <div className="text-center space-y-3">
             <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-white">
@@ -118,7 +187,7 @@ export default function Home() {
               </p>
             </div>
             <div className="w-full max-w-xs bg-zinc-800 h-1.5 rounded-full overflow-hidden border border-zinc-700">
-              <div className="h-full bg-blue-600 transition-all duration-500 ease-out" style={{ width: \`\${((loadingStep + 1) / LOADING_STEPS.length) * 100}%\` }} />
+              <div className="h-full bg-blue-600 transition-all duration-500 ease-out" style={{ width: `${((loadingStep + 1) / LOADING_STEPS.length) * 100}%` }} />
             </div>
           </div>
         ) : results ? (
@@ -136,7 +205,7 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 gap-4">
               {results.map((comment, idx) => (
-                <div key={idx} className={\`p-4 rounded-xl border \${getSeverityColor(comment.severity)}\`}>
+                <div key={idx} className={`p-4 rounded-xl border ${getSeverityColor(comment.severity)}`}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-2 w-full">
                       <div className="flex items-center gap-2">
@@ -193,13 +262,13 @@ export default function Home() {
                   <span className="w-3 h-3 rounded-full bg-green-500" />
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-[11px] text-zinc-500 font-medium">{language === "diff" ? "commit.patch" : \`code.\${language === "python" ? "py" : language === "javascript" ? "js" : "txt"}\`}</span>
+                  <span className="text-[11px] text-zinc-500 font-medium">{language === "diff" ? "commit.patch" : `code.${language === "python" ? "py" : language === "javascript" ? "js" : "txt"}`}</span>
                   <button onClick={() => setCode("")} className="text-[11px] text-zinc-400 hover:text-white transition">Clear</button>
                 </div>
               </div>
               <textarea value={code} onChange={(e) => setCode(e.target.value)} placeholder="Paste your source code or diff here..." className="w-full h-80 bg-transparent text-white px-4 py-3 focus:outline-none resize-none font-mono leading-relaxed" />
               <div className="px-4 py-1.5 bg-zinc-900 border-t border-zinc-800 text-[10px] text-zinc-500 flex justify-between uppercase tracking-wider font-semibold">
-                <span>{code.split('\\n').length} Lines</span>
+                <span>{code.split('\n').length} Lines</span>
                 <span>{code.length} Chars</span>
               </div>
             </div>
