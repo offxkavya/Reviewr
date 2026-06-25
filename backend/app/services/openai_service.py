@@ -6,6 +6,14 @@ from app.schemas.review import ReviewResponse, ReviewComment
 def get_openai_client() -> OpenAI:
     if not settings.OPENAI_API_KEY:
         return None
+        
+    # If using a Groq API key (starts with gsk_), route to Groq's OpenAI-compatible endpoint
+    if settings.OPENAI_API_KEY.startswith("gsk_"):
+        return OpenAI(
+            api_key=settings.OPENAI_API_KEY,
+            base_url="https://api.groq.com/openai/v1"
+        )
+        
     return OpenAI(api_key=settings.OPENAI_API_KEY)
 
 def generate_mock_comments(code: str) -> list:
@@ -80,8 +88,11 @@ def review_code(code: str, language: str = None) -> ReviewResponse:
         user_prompt = f"Language: {language}\n\n" + user_prompt
 
     try:
+        is_groq = settings.OPENAI_API_KEY.startswith("gsk_")
+        model_name = "llama3-8b-8192" if is_groq else "gpt-4o-mini"
+        
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=model_name,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
