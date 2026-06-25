@@ -32,15 +32,11 @@ export default function RootLayout({
               <span className="font-bold text-xl tracking-tight text-white">
                 Reviewr
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700">
-                Phase 1
-              </span>
             </div>
             
             <div className="flex items-center gap-6">
               {/* Status Badge */}
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-medium">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 Review Engine: Ready
               </div>
             </div>
