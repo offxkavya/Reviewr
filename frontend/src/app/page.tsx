@@ -93,10 +93,10 @@ export default function Home() {
 
   const getSeverityColor = (severity: string) => {
     switch(severity) {
-      case "critical": return "border-rose-500 bg-rose-500 text-rose-100";
-      case "warning": return "border-amber-500 bg-amber-500 text-amber-100";
-      case "info": return "border-blue-500 bg-blue-500 text-blue-100";
-      default: return "border-zinc-500 bg-zinc-500 text-zinc-100";
+      case "critical": return "border-red-900 bg-red-950/40 text-red-400";
+      case "warning": return "border-amber-900 bg-amber-950/40 text-amber-400";
+      case "info": return "border-blue-900 bg-blue-950/40 text-blue-400";
+      default: return "border-zinc-800 bg-zinc-900/40 text-zinc-400";
     }
   };
 
@@ -123,8 +123,6 @@ export default function Home() {
   if (!isAuthenticated) {
     return (
       <div className="flex-1 bg-black flex flex-col items-center justify-center min-h-screen relative overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-blue-900/40 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[400px] h-[400px] rounded-full bg-indigo-900/40 blur-[100px] pointer-events-none" />
         
         <div className="w-full max-w-md z-10 p-8 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl text-center space-y-8 animate-fade-in">
           <div className="space-y-4">
@@ -148,8 +146,6 @@ export default function Home() {
 
   return (
     <div className="flex-1 bg-black flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-blue-900 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[300px] h-[300px] rounded-full bg-indigo-900 blur-[100px] pointer-events-none" />
       
       <div className="w-full max-w-5xl z-10 space-y-8">
         <div className="flex justify-end">

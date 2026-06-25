@@ -35,21 +35,4 @@ body {
   background: #3f3f46;
 }
 
-/* Custom glow and styling helpers */
-.glow-card {
-  position: relative;
-  transition: all 0.3s ease;
-}
-.glow-card::after {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), transparent);
-  z-index: -1;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.glow-card:hover::after {
-  opacity: 1;
-}
+

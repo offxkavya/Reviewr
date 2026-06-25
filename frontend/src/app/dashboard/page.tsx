@@ -48,7 +48,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 bg-black flex flex-col p-6 sm:p-12 relative overflow-hidden min-h-screen">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-blue-900/20 blur-[120px] pointer-events-none" />
       
       <div className="w-full max-w-6xl mx-auto z-10 space-y-8 animate-fade-in">
         <div>
