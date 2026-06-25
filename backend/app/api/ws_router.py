@@ -43,9 +43,9 @@ async def redis_listener():
             payload = data.get("payload")
             await manager.broadcast_local(room, json.dumps(payload))
 
-# Start the listener in the background when the app starts
-# This should ideally be called in an @app.on_event("startup")
-asyncio.create_task(redis_listener())
+@router.on_event("startup")
+async def startup_event():
+    asyncio.create_task(redis_listener())
 
 @router.websocket("/{room}")
 async def websocket_endpoint(websocket: WebSocket, room: str):
