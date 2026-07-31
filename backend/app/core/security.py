@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import jwt
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
