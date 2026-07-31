@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
