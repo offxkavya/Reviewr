@@ -1,5 +1,14 @@
 from fastapi.testclient import TestClient
 from app.main import app
+from app.core.security import get_current_user
+
+class MockUser:
+    id = 1
+    github_id = "12345"
+    username = "testuser"
+    email = "test@example.com"
+
+app.dependency_overrides[get_current_user] = lambda: MockUser()
 
 client = TestClient(app)
 
