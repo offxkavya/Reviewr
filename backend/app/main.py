@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.review_router import router as review_router
@@ -7,8 +10,20 @@ from app.db.session import engine, Base
 import app.models.user
 import app.models.review
 
-# Create tables (for local development)
-Base.metadata.create_all(bind=engine)
+# Create tables (for local development) with fallback to SQLite
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    import sys
+    print(f"Warning: Database connection failed ({e}). Falling back to local SQLite.", file=sys.stderr)
+    from sqlalchemy import create_engine
+    import app.db.session as session
+    session.engine = create_engine(
+        "sqlite:///./reviewr.db", 
+        connect_args={"check_same_thread": False}
+    )
+    session.SessionLocal.configure(bind=session.engine)
+    Base.metadata.create_all(bind=session.engine)
 
 from app.api.webhook_router import router as webhook_router
 from app.api.ws_router import router as ws_router
